@@ -65,12 +65,16 @@ const getTreeData = data => {
 };
 
 const TreeBeardRender = props => {
+  const {aggregations, level} = props;
+  const [aggregatedData, setAggregatedData] = useState([]);
+  // const concatAggregations = ()
   const [data, setData] = useState(getTreeData(props.data));
   useEffect(() => {
     setData(getTreeData(props.data));
   }, [props.data]);
   const [cursor, setCursor] = useState(false);
   const onToggle = (node, toggled) => {
+    console.log({node, toggled})
     if (cursor) {
       cursor.active = false;
     }

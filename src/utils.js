@@ -14,3 +14,21 @@ export function getPathLevelData(data = []) {
 export function isFile(fileName) {
   return fileName.indexOf(".") > -1;
 }
+
+const getPathLevelQuery = level => ({
+  [`path_level_${level}.keyword`]: {
+    terms: { field: `path_level_${level}.keyword` }
+  }
+});
+
+export const getDefaultQuery = level => {
+  let lastLevelQuery = getPathLevelQuery(level);
+  level--;
+  while (level >= 0) {
+    const currQuery = getPathLevelQuery(level);
+    currQuery[`path_level_${level}.keyword`].aggs = lastLevelQuery;
+    lastLevelQuery = currQuery;
+    level--;
+  }
+  return { size: 0, aggs: lastLevelQuery };
+};

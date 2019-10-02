@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import "./App.css";
 import { ReactiveBase, ReactiveComponent } from "@appbaseio/reactivesearch";
 import TreeBeardRender from "./components/TreeBeardRender";
-import { getPathLevelData, getValuesByPrefix } from "./utils";
+import { getDefaultQuery, getPathLevelData } from "./utils";
 
 function App() {
+  const [level, setLevel] = useState(0);
   return (
     <div className="App">
       <ReactiveBase
@@ -13,11 +14,10 @@ function App() {
       >
         <ReactiveComponent
           componentId="TreeBeard"
-          defaultQuery={() => ({
-            aggs: {}
-          })}
+          defaultQuery={() => getDefaultQuery(level)}
         >
           {props => {
+            console.log("data", props);
             return <TreeBeardRender data={getPathLevelData(props.data)} />;
           }}
         </ReactiveComponent>
