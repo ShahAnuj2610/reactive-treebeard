@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Treebeard } from "react-treebeard";
 import { isFile } from "../utils";
 import { cloneDeep } from "lodash-es";
@@ -10,7 +10,7 @@ const sampleData = {
   children: [
     {
       name: "parent",
-      children: [{ name: "child1" }, { name: "child2" }]
+      children: []
     },
     {
       name: "loading parent",
@@ -54,12 +54,21 @@ const buildTree = data => {
     });
     finalTreeData.push(tree.root);
   });
-  console.log(finalTreeData);
-  return [];
+  return finalTreeData;
+};
+
+const getTreeData = data => {
+  const root = { name: "root", toggle: true, children: [] };
+  const treeStruct = JSON.parse(JSON.stringify(buildTree(data)));
+  treeStruct.forEach(data => root.children.push(data));
+  return root;
 };
 
 const TreeBeardRender = props => {
-  const [data, setData] = useState(buildTree(props.data));
+  const [data, setData] = useState(getTreeData(props.data));
+  useEffect(() => {
+    setData(getTreeData(props.data));
+  }, [props.data]);
   const [cursor, setCursor] = useState(false);
   const onToggle = (node, toggled) => {
     if (cursor) {

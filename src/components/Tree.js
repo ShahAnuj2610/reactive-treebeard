@@ -8,9 +8,9 @@ export function Tree() {
   };
 
   this.addChild = function(node, parent) {
-    console.log("add child", node, parent);
     // if the provided parent is actual parent, add the node to its children
     if (parent.name === node.parent) {
+      if (!parent.children) parent.children = [];
       parent.children.push(new Node(node));
     } else if (parent.children) {
       const parentData = parent.children.find(par => par.name === node.name);
@@ -31,5 +31,4 @@ export function Tree() {
 function Node(node) {
   this.name = node.name;
   this.parent = node.parent;
-  this.children = [];
 }
