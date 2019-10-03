@@ -32,3 +32,23 @@ export const getDefaultQuery = level => {
   }
   return { size: 0, aggs: lastLevelQuery };
 };
+
+export const searchAPI = async query => {
+  try {
+    const response = await fetch(
+      "https://scalr.api.appbase.io/otaras-historical-data/_search",
+      {
+        method: "post",
+        body: JSON.stringify(query),
+        headers: {
+          authorization: `Basic ${btoa(
+            "GGFMhzsXJ:78d1da1d-1e34-4e9c-9e6a-4e47361ecea6"
+          )}`
+        }
+      }
+    );
+    return { response };
+  } catch (e) {
+    return { error: e };
+  }
+};

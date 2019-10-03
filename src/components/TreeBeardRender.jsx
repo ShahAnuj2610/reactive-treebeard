@@ -1,8 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Treebeard } from "react-treebeard";
-import { isFile } from "../utils";
+import { getDefaultQuery, isFile, searchAPI } from "../utils";
 import { cloneDeep, get } from "lodash-es";
 import { Tree } from "./Tree";
+
+const sampleData = {
+  name: "root",
+  toggled: true,
+  children: [
+    {
+      name: "parent",
+      children: []
+    },
+    {
+      name: "loading parent",
+      loading: true,
+      children: []
+    },
+    {
+      name: "parent",
+      children: [
+        {
+          name: "nested parent",
+          children: [
+            { name: "nested child 1", children: [{ name: "nested child 3" }] },
+            { name: "nested child 2" }
+          ]
+        }
+      ]
+    }
+  ]
+};
 
 const constructChildParentsRel = (data = []) => {
   const clonedData = cloneDeep(data);
@@ -39,7 +67,6 @@ const getTreeData = aggData => {
   const root = { name: "root", toggle: true, children: [], level: 0 };
   const treeStruct = JSON.parse(JSON.stringify(buildTree(data)));
   treeStruct.forEach(data => root.children.push(data));
-  console.log({ root });
   return root;
 };
 
@@ -67,24 +94,62 @@ const flatAggregations = aggregations => {
   return flatTreeData;
 };
 
-const TreeBeardRender = props => {
-  const { aggregations, level, setLevel, loading } = props;
-  const [data, setData] = useState(getTreeData(aggregations));
-  useEffect(() => {
-    setData(getTreeData(aggregations));
-  }, [aggregations]);
+const createChildren = (aggs, node) => {
+  const { level } = node;
+  if (level === 0) {
+    return aggs["path_level_0.keyword"].buckets.map(bucket => ({
+      name: bucket.key,
+      children: isFile(bucket.key) ? null : [],
+      level: level + 1,
+      path: bucket.key
+    }));
+  }
+  const paths = node.path.split("/");
+  let iterLevel = 0;
+  let currBucket = aggs[`path_level_${iterLevel}.keyword`].buckets.find(
+    buck => buck.key === paths[0]
+  );
+  iterLevel++;
+  while (iterLevel <= level - 1) {
+    currBucket = currBucket[`path_level_${iterLevel}.keyword`].buckets.find(
+      buck => buck.key === paths[iterLevel]
+    );
+    iterLevel++;
+  }
+  return currBucket[`path_level_${level}.keyword`].buckets.map(bucket => ({
+    name: bucket.key,
+    children: isFile(bucket.key) ? null : [],
+    level: level + 1,
+    path: `${node.path}/${bucket.key}`
+  }));
+};
+
+const TreeBeardRender = () => {
+  const [data, setData] = useState({
+    name: "root",
+    toggled: false,
+    children: [],
+    level: 0
+  });
   const [cursor, setCursor] = useState(false);
   const onToggle = async (node, toggled) => {
-    console.log({ node, toggled });
     if (cursor) {
       cursor.active = false;
     }
     node.active = true;
     if (node.children) {
       node.toggled = toggled;
-      node.loading = loading;
+      node.loading = true;
     }
-    setLevel(node.level + 1);
+    setCursor(node);
+    setData(Object.assign({}, data));
+    if (!node.toggled) return;
+    const { response } = await searchAPI(getDefaultQuery(node.level));
+    if (response && response.status >= 400) {
+      throw new Error("Bad response from server");
+    }
+    node.loading = false;
+    node.children = createChildren((await response.json()).aggregations, node);
     setCursor(node);
     setData(Object.assign({}, data));
   };
