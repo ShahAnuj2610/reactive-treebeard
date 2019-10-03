@@ -17,8 +17,15 @@ function App() {
           defaultQuery={() => getDefaultQuery(level)}
         >
           {props => {
-            console.log("data", props);
-            return <TreeBeardRender data={getPathLevelData(props.data)} />;
+            return (
+              <TreeBeardRender
+                level={level}
+                setLevel={setLevel}
+                data={getPathLevelData(props.data)}
+                aggregations={props.aggregations}
+                loading={props.loading}
+              />
+            );
           }}
         </ReactiveComponent>
       </ReactiveBase>

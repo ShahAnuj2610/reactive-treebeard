@@ -1,3 +1,5 @@
+import { isFile } from "../utils";
+
 export function Tree() {
   this.root = null;
   // this function makes node root, if root is empty, otherwise delegate it to recursive function
@@ -31,4 +33,6 @@ export function Tree() {
 function Node(node) {
   this.name = node.name;
   this.parent = node.parent;
+  this.level = node.level;
+  if (!isFile(node.name)) this.children = [];
 }
