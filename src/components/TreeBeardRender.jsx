@@ -126,9 +126,21 @@ const createChildren = (aggs, node) => {
 
 class TreeBeardRender extends Component {
   state = {
-    data: { name: "root", toggled: false, children: [], level: 0 },
+    data: [],
     cursor: null
   };
+
+  async componentDidMount() {
+    this.setState({ loading: true });
+    const { response } = await searchAPI(getDefaultQuery(0));
+    if (response && response.status >= 400) {
+      throw new Error("Bad response from server");
+    }
+    this.setState({
+      data: createChildren((await response.json()).aggregations, { level: 0 }),
+      loading: false
+    });
+  }
 
   onToggle = async (node, toggled) => {
     const { cursor } = this.state;
@@ -150,6 +162,12 @@ class TreeBeardRender extends Component {
   };
 
   render() {
+    if (this.state.loading)
+      return (
+        <div style={{ color: "#E2C089", backgroundColor: "#20252b" }}>
+          loading...
+        </div>
+      );
     return <Treebeard data={this.state.data} onToggle={this.onToggle} />;
   }
 }
