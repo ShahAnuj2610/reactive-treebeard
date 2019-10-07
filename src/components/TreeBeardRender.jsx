@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { Component } from "react";
 import { Treebeard } from "react-treebeard";
 import { getDefaultQuery, isFile, searchAPI } from "../utils";
 import { cloneDeep, get } from "lodash-es";
@@ -124,25 +124,21 @@ const createChildren = (aggs, node) => {
   }));
 };
 
-const TreeBeardRender = () => {
-  const [data, setData] = useState({
-    name: "root",
-    toggled: false,
-    children: [],
-    level: 0
-  });
-  const [cursor, setCursor] = useState(false);
-  const onToggle = async (node, toggled) => {
-    if (cursor) {
-      cursor.active = false;
-    }
+class TreeBeardRender extends Component {
+  state = {
+    data: { name: "root", toggled: false, children: [], level: 0 },
+    cursor: null
+  };
+
+  onToggle = async (node, toggled) => {
+    const { cursor } = this.state;
+    if (cursor) cursor.active = false;
     node.active = true;
     if (node.children) {
       node.toggled = toggled;
       node.loading = true;
     }
-    setCursor(node);
-    setData(Object.assign({}, data));
+    this.setState({ cursor: node });
     if (!node.toggled) return;
     const { response } = await searchAPI(getDefaultQuery(node.level));
     if (response && response.status >= 400) {
@@ -150,11 +146,12 @@ const TreeBeardRender = () => {
     }
     node.loading = false;
     node.children = createChildren((await response.json()).aggregations, node);
-    setCursor(node);
-    setData(Object.assign({}, data));
+    this.setState({ cursor: node });
   };
 
-  return <Treebeard data={data} onToggle={onToggle} />;
-};
+  render() {
+    return <Treebeard data={this.state.data} onToggle={this.onToggle} />;
+  }
+}
 
 export default TreeBeardRender;
