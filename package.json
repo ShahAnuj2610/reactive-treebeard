@@ -7,7 +7,7 @@
     "react-dom": "^16.10.1",
     "react-scripts": "3.1.2",
     "react-treebeard": "^3.2.4",
-    "lodash-es": "^4.17.15",
+    "lodash-es": "^4.17.21",
     "cross-fetch": "^3.0.4"
   },
   "devDependencies": {
